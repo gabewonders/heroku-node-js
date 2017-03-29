@@ -3,6 +3,8 @@ var app = express()
 var bodyParser = require('body-parser')
 var docusign = require('./docusign')
 
+app.set('port', (process.env.PORT || 5000));
+
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json())
 
