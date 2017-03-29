@@ -17,6 +17,8 @@ app.post('/docusign', function(req, res) {
 
   ds = new docusign()
   ds.sendTemplate(req.body)
+
+  response.send('Attempted to send to docusign. See logs for more details.')
 })
 
 app.listen(app.get('port'), function() {
