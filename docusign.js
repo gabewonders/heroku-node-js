@@ -5,41 +5,40 @@ var docusign = require('docusign-esign'),
 /**
  * Constructor - initilizes docusign connection
  */ 
-function Docusign() {
+function Docusign(demo, username, password, integratorKey) {
+    // TODO null check params
+
     // initialize the api client
     apiClient = new docusign.ApiClient();
-}
 
-Docusign.prototype.sendTemplate = function(envelopeRequest) {
-    var baseUrl = 'https://' + envelopeRequest.docusignEnv + '.docusign.net/restapi';
-    console.log(envelopeRequest.username);
+    // set the docusign environment to sandbox or production
+    var docusignEnv = demo == true ? 'demo' : 'www';
+    var baseUrl = 'https://' + docusignEnv + '.docusign.net/restapi';
     apiClient.setBasePath(baseUrl);
 
     // create JSON formatted auth header
     var creds = JSON.stringify({
-      Username: envelopeRequest.username,
-      Password: envelopeRequest.password,
-      IntegratorKey: envelopeRequest.integratorKey
+      Username: username,
+      Password: password,
+      IntegratorKey: integratorKey
     });
     apiClient.addDefaultHeader('X-DocuSign-Authentication', creds);
 
     // assign api client to the Configuration object
     docusign.Configuration.default.setDefaultApiClient(apiClient);
 
-    async.waterfall([
-      function login (next) {
-        // login call available off the AuthenticationApi
-        var authApi = new docusign.AuthenticationApi();
+    // login call available off the AuthenticationApi
+    var authApi = new docusign.AuthenticationApi();
 
-        // login has some optional parameters we can set
-        var loginOps = {};
-        loginOps.apiPassword = 'true';
-        loginOps.includeAccountIdGuid = 'true';
-        authApi.login(loginOps, function (err, loginInfo, response) {
-          if (err) {
-            return next(err);
-          }
-          if (loginInfo) {
+    // login has some optional parameters we can set
+    var loginOps = {};
+    loginOps.apiPassword = 'true';
+    loginOps.includeAccountIdGuid = 'true';
+    authApi.login(loginOps, function (err, loginInfo, response) {
+        if (err) {
+            return err;
+        }
+        if (loginInfo) {
             // list of user account(s)
             // note that a given user may be a member of multiple accounts
             var loginAccounts = loginInfo.loginAccounts;
@@ -52,11 +51,12 @@ Docusign.prototype.sendTemplate = function(envelopeRequest) {
             // below code required for production, no effect in demo (same domain)
             apiClient.setBasePath(accountDomain[0]);
             docusign.Configuration.default.setDefaultApiClient(apiClient);
-            next(null, loginAccount);
-          }
-        });
-      },
+        }
+    });
+}
 
+Docusign.prototype.sendTemplate = function(envelopeRequest) {
+    async.waterfall([
       function sendTemplate (loginAccount, next) {
         // create a new envelope object that we will manage the signature request through
         var envDef = new docusign.EnvelopeDefinition();
@@ -98,9 +98,9 @@ Docusign.prototype.sendTemplate = function(envelopeRequest) {
     ], function end (error) {
       if (error) {
         console.log('Error: ', error);
-        process.exit(1);
+        return error;
       }
-      process.exit();
+      return 'Successfully sent to DocuSign!';
     });    
 };
 

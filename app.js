@@ -15,7 +15,7 @@ app.get('/', function (req, res) {
 app.post('/docusign', function(req, res) {
   console.log('Request Body: ', req.body)
 
-  ds = new docusign()
+  var ds = new Docusign(req.body.demo, req.body.username, req.body.password, req.body.integratorKey);
   ds.sendTemplate(req.body)
 
   response.send('Attempted to send to docusign. See logs for more details.')
