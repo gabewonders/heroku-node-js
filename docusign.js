@@ -1,4 +1,4 @@
-var docusign = require('docusign-esign'),
+var docusign = require('docusign-esign'), // require docusign sdk
     async = require('async'),
     apiClient;
 
